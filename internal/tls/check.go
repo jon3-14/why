@@ -8,44 +8,46 @@ import (
 )
 
 type Result struct {
-	Success     bool
-	Duration    time.Duration
-	Version     string
-	Error       string
-	ExpiresIn   time.Duration
-	Expired     bool
-	CommonName  string
+	Success    bool
+	Duration   time.Duration
+	Version    string
+	Error      string
+	ExpiresIn  time.Duration
+	Expired    bool
+	CommonName string
 }
 
 func Check(host string, port int) Result {
-	address := fmt.Sprintf("%s:%d", host, port)
+	address := net.JoinHostPort(host, fmt.Sprintf("%d", port))
 
 	start := time.Now()
 
 	dialer := &net.Dialer{
-	Timeout: 5 * time.Second,
-}
+		Timeout: 5 * time.Second,
+	}
 
-conn, err := tls.DialWithDialer(
-	dialer,
-	"tcp",
-	address,
-	&tls.Config{
-		ServerName: host,
-	},
-)
+	conn, err := tls.DialWithDialer(
+		dialer,
+		"tcp",
+		address,
+		&tls.Config{
+			ServerName: host,
+		},
+	)
 
 	duration := time.Since(start)
 
 	if err != nil {
 		return Result{
-			Success: false,
-			Error: err.Error(),
+			Success:  false,
+			Error:    err.Error(),
 			Duration: duration,
 		}
 	}
 
-	defer conn.Close()
+	defer func() {
+		_ = conn.Close()
+	}()
 
 	state := conn.ConnectionState()
 

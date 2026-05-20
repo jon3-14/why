@@ -7,13 +7,13 @@ import (
 )
 
 type Result struct {
-	Success bool
+	Success  bool
 	Duration time.Duration
-	Error string
+	Error    string
 }
 
 func Check(host string, port int) Result {
-	address := fmt.Sprintf("%s:%d", host, port)
+	address := net.JoinHostPort(host, fmt.Sprintf("%d", port))
 
 	start := time.Now()
 
@@ -23,16 +23,22 @@ func Check(host string, port int) Result {
 
 	if err != nil {
 		return Result{
-			Success: false,
-			Error: err.Error(),
+			Success:  false,
+			Error:    err.Error(),
 			Duration: duration,
 		}
 	}
 
-	conn.Close()
+	if err := conn.Close(); err != nil {
+		return Result{
+			Success:  false,
+			Error:    err.Error(),
+			Duration: duration,
+		}
+	}
 
 	return Result{
-		Success: true,
+		Success:  true,
 		Duration: duration,
 	}
 }

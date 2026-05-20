@@ -15,69 +15,67 @@ import (
 	"github.com/spf13/cobra"
 )
 
-
-
 var rootCmd = &cobra.Command{
-    Use:   "why <target>",
-    Short: "Explain connectivity issues",
-    Args:  cobra.ExactArgs(1),
-    Run: func(cmd *cobra.Command, args []string) {
-	target := args[0]
+	Use:   "why <target>",
+	Short: "Explain connectivity issues",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
 
-	parsed, err := url.Parse(target)
-	if err != nil {
-		fmt.Println("Invalid URL:", err)
-		return
-	}
-
-	host := parsed.Hostname()
-
-	result := dns.Check(host)
-
-	fmt.Println("DNS Check")
-
-	if result.Success {
-		fmt.Printf("✓ Resolved in %v\n", result.Duration)
-
-		for _, ip := range result.IPs {
-			fmt.Printf("  - %s\n", ip)
+		parsed, err := url.Parse(target)
+		if err != nil {
+			fmt.Println("Invalid URL:", err)
+			return
 		}
-	} else {
-		fmt.Printf("✗ DNS failed: %s\n", result.Error)
-	}
 
-	fmt.Println()
+		host := parsed.Hostname()
 
-tcpResult := tcp.Check(host, 443)
+		result := dns.Check(host)
 
-fmt.Println("TCP")
+		fmt.Println("DNS Check")
 
-if tcpResult.Success {
-	fmt.Printf("✓ Connected to port 443 in %v\n", tcpResult.Duration)
-} else {
-	fmt.Printf("✗ TCP failed: %s\n", tcpResult.Error)
-}
+		if result.Success {
+			fmt.Printf("✓ Resolved in %v\n", result.Duration)
 
-fmt.Println()
+			for _, ip := range result.IPs {
+				fmt.Printf("  - %s\n", ip)
+			}
+		} else {
+			fmt.Printf("✗ DNS failed: %s\n", result.Error)
+		}
 
-tlsResult := tls.Check(host, 443)
+		fmt.Println()
 
-fmt.Println("TLS")
+		tcpResult := tcp.Check(host, 443)
 
-if tlsResult.Success {
-	fmt.Printf("✓ Handshake successful in %v\n", tlsResult.Duration)
-	fmt.Printf("✓ Version: %s\n", tlsResult.Version)
-	fmt.Printf("✓ Certificate CN: %s\n", tlsResult.CommonName)
+		fmt.Println("TCP")
 
-	if tlsResult.Expired {
-		fmt.Println("✗ Certificate is expired")
-	} else {
-		fmt.Printf("✓ Certificate valid for %v\n", tlsResult.ExpiresIn.Round(time.Hour*24))
-	}
-} else {
-	fmt.Printf("✗ TLS failed: %s\n", tlsResult.Error)
-}
-},
+		if tcpResult.Success {
+			fmt.Printf("✓ Connected to port 443 in %v\n", tcpResult.Duration)
+		} else {
+			fmt.Printf("✗ TCP failed: %s\n", tcpResult.Error)
+		}
+
+		fmt.Println()
+
+		tlsResult := tls.Check(host, 443)
+
+		fmt.Println("TLS")
+
+		if tlsResult.Success {
+			fmt.Printf("✓ Handshake successful in %v\n", tlsResult.Duration)
+			fmt.Printf("✓ Version: %s\n", tlsResult.Version)
+			fmt.Printf("✓ Certificate CN: %s\n", tlsResult.CommonName)
+
+			if tlsResult.Expired {
+				fmt.Println("✗ Certificate is expired")
+			} else {
+				fmt.Printf("✓ Certificate valid for %v\n", tlsResult.ExpiresIn.Round(time.Hour*24))
+			}
+		} else {
+			fmt.Printf("✗ TLS failed: %s\n", tlsResult.Error)
+		}
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -100,5 +98,3 @@ func init() {
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
-
-

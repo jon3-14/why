@@ -6,10 +6,10 @@ import (
 )
 
 type Result struct {
-	Success bool
-	IPs     []string
+	Success  bool
+	IPs      []string
 	Duration time.Duration
-	Error   string
+	Error    string
 }
 
 func Check(host string) Result {
@@ -21,15 +21,15 @@ func Check(host string) Result {
 
 	if err != nil {
 		return Result{
-			Success: false,
-			Error:   err.Error(),
+			Success:  false,
+			Error:    err.Error(),
 			Duration: duration,
 		}
 	}
 
 	return Result{
-		Success: true,
-		IPs:     ips,
+		Success:  true,
+		IPs:      ips,
 		Duration: duration,
 	}
 }
