@@ -24,8 +24,8 @@ func Check(host string, port int) Result {
 
 	if err != nil {
 		return Result{
-			Success: false,
-			Error: err.Error(),
+			Success:  false,
+			Error:    err.Error(),
 			Duration: duration,
 		}
 	}
@@ -38,8 +38,8 @@ func Check(host string, port int) Result {
 
 	if err != nil {
 		return Result{
-			Success: false,
-			Error: err.Error(),
+			Success:  false,
+			Error:    err.Error(),
 			Duration: duration,
 		}
 	}

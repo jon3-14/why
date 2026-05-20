@@ -1,4 +1,4 @@
-package http
+package httpcheck
 
 import (
 	"net/http"

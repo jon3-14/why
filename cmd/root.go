@@ -10,7 +10,8 @@ import (
 	"time"
 
 	"github.com/jon-314/why/internal/dns"
-	httpcheck "github.com/jon-314/why/internal/http"
+	"github.com/jon-314/why/internal/httpcheck"
+	"github.com/jon-314/why/internal/output"
 	"github.com/jon-314/why/internal/summary"
 	"github.com/jon-314/why/internal/tcp"
 	"github.com/jon-314/why/internal/tls"
@@ -31,94 +32,85 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
+		
 		host := parsed.Hostname()
+		output.Section(fmt.Sprintf("WHY report for %s", host))
 
-		result := dns.Check(host)
+		dnsResult := dns.Check(host)
 
-		fmt.Println("DNS Check")
+		output.Section("DNS")
 
-		if result.Success {
-			fmt.Printf("✓ Resolved in %v\n", result.Duration)
-
-			for _, ip := range result.IPs {
-				fmt.Printf("  - %s\n", ip)
-			}
+		if dnsResult.Success {
+			output.Success("Resolved in %v", dnsResult.Duration)
 		} else {
-			fmt.Printf("✗ DNS failed: %s\n", result.Error)
+			output.Failure("DNS failed: %s", dnsResult.Error)
 		}
-
-		fmt.Println()
 
 		tcpResult := tcp.Check(host, 443)
 
-		fmt.Println("TCP")
+		output.Section("TCP")
 
 		if tcpResult.Success {
-			fmt.Printf("✓ Connected to port 443 in %v\n", tcpResult.Duration)
+			output.Success("Connected to port 443 in %v", tcpResult.Duration)
 		} else {
-			fmt.Printf("✗ TCP failed: %s\n", tcpResult.Error)
+			output.Failure("TCP failed: %s", tcpResult.Error)
 		}
 
-		fmt.Println()
+		udpResult := udp.Check(host, 53)
+
+		output.Section("UDP")
+
+		if udpResult.Success {
+			output.Success("UDP packet sent in %v", udpResult.Duration)
+
+			if udpResult.Response {
+				output.Success("Response received")
+			} else {
+				output.Warning("No response received")
+			}
+		} else {
+			output.Failure("UDP failed: %s", udpResult.Error)
+		}
 
 		tlsResult := tls.Check(host, 443)
 
-		fmt.Println("TLS")
+		output.Section("TLS")
 
 		if tlsResult.Success {
-			fmt.Printf("✓ Handshake successful in %v\n", tlsResult.Duration)
-			fmt.Printf("✓ Version: %s\n", tlsResult.Version)
-			fmt.Printf("✓ Certificate CN: %s\n", tlsResult.CommonName)
+			output.Success("Handshake successful in %v", tlsResult.Duration)
+			output.Success("Version: %s", tlsResult.Version)
+			output.Success("Certificate CN: %s", tlsResult.CommonName)
 
 			if tlsResult.Expired {
-				fmt.Println("✗ Certificate is expired")
+				output.Failure("Certificate is expired")
 			} else {
-				fmt.Printf("✓ Certificate valid for %v\n", tlsResult.ExpiresIn.Round(time.Hour*24))
+				output.Success(
+					"Certificate valid for %v",
+					tlsResult.ExpiresIn.Round(time.Hour*24),
+				)
 			}
 		} else {
-			fmt.Printf("✗ TLS failed: %s\n", tlsResult.Error)
+			output.Failure("TLS failed: %s", tlsResult.Error)
 		}
-
-		fmt.Println()
 
 		httpResult := httpcheck.Check(target)
 
-		fmt.Println("HTTP")
+		output.Section("HTTP")
 
 		if httpResult.Success {
-			fmt.Printf("✓ %s\n", httpResult.Status)
-			fmt.Printf("✓ Response time: %v\n", httpResult.Duration)
+			output.Success("%s", httpResult.Status)
+			output.Success("Response time: %v", httpResult.Duration)
 
 			if httpResult.Redirects > 0 {
-				fmt.Printf("✓ Redirects: %d\n", httpResult.Redirects)
+				output.Success("Redirects: %d", httpResult.Redirects)
 			}
 		} else {
-			fmt.Printf("✗ HTTP failed: %s\n", httpResult.Error)
+			output.Failure("HTTP failed: %s", httpResult.Error)
 		}
 
-		fmt.Println()
+		output.Section("Summary")
 
-udpResult := udp.Check(host, 53)
-
-fmt.Println("UDP")
-
-if udpResult.Success {
-	fmt.Printf("✓ UDP packet sent in %v\n", udpResult.Duration)
-
-	if udpResult.Response {
-		fmt.Println("✓ Response received")
-	} else {
-		fmt.Println("! No response received")
-	}
-} else {
-	fmt.Printf("✗ UDP failed: %s\n", udpResult.Error)
-}
-
-		fmt.Println()
-		fmt.Println("Summary")
-		fmt.Println()
-
-		summary.PrintTiming("DNS", result.Duration)
+		summary.PrintTiming("DNS", dnsResult.Duration)
 		summary.PrintTiming("TCP", tcpResult.Duration)
 		summary.PrintTiming("UDP", udpResult.Duration)
 		summary.PrintTiming("TLS", tlsResult.Duration)
@@ -134,16 +126,4 @@ func Execute() {
 	if err != nil {
 		os.Exit(1)
 	}
-}
-
-func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.why.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
