@@ -10,6 +10,3 @@ linters:
     - unused
     - ineffassign
     - errcheck
-
-issues:
-  exclude-use-default: false

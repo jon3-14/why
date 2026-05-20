@@ -32,7 +32,6 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
-		
 		host := parsed.Hostname()
 		output.Section(fmt.Sprintf("WHY report for %s", host))
 
