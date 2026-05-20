@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/jon-314/why/internal/dns"
+	httpcheck "github.com/jon-314/why/internal/http"
+	"github.com/jon-314/why/internal/summary"
 	"github.com/jon-314/why/internal/tcp"
 	"github.com/jon-314/why/internal/tls"
 	"github.com/spf13/cobra"
@@ -75,6 +77,33 @@ var rootCmd = &cobra.Command{
 		} else {
 			fmt.Printf("✗ TLS failed: %s\n", tlsResult.Error)
 		}
+
+		fmt.Println()
+
+		httpResult := httpcheck.Check(target)
+
+		fmt.Println("HTTP")
+
+		if httpResult.Success {
+			fmt.Printf("✓ %s\n", httpResult.Status)
+			fmt.Printf("✓ Response time: %v\n", httpResult.Duration)
+
+			if httpResult.Redirects > 0 {
+				fmt.Printf("✓ Redirects: %d\n", httpResult.Redirects)
+			}
+		} else {
+			fmt.Printf("✗ HTTP failed: %s\n", httpResult.Error)
+		}
+
+		fmt.Println()
+		fmt.Println("Summary")
+		fmt.Println()
+
+		summary.PrintTiming("DNS", result.Duration)
+		summary.PrintTiming("TCP", tcpResult.Duration)
+		summary.PrintTiming("TLS", tlsResult.Duration)
+		summary.PrintTiming("HTTP", httpResult.Duration)
+		fmt.Println()
 	},
 }
 
