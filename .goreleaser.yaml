@@ -20,8 +20,3 @@ archives:
 
 checksum:
   name_template: "checksums.txt"
-
-release:
-  github:
-    owner: jon-314
-    name: why
