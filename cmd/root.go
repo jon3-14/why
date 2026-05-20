@@ -11,6 +11,7 @@ import (
 
 	"github.com/jon-314/why/internal/dns"
 	"github.com/jon-314/why/internal/httpcheck"
+	"github.com/jon-314/why/internal/icmp"
 	"github.com/jon-314/why/internal/output"
 	"github.com/jon-314/why/internal/summary"
 	"github.com/jon-314/why/internal/tcp"
@@ -107,6 +108,16 @@ var rootCmd = &cobra.Command{
 			output.Failure("HTTP failed: %s", httpResult.Error)
 		}
 
+		icmpResult := icmp.Check(host)
+
+		output.Section("ICMP")
+
+		if icmpResult.Success {
+			output.Success("Ping successful in %v", icmpResult.Duration)
+		} else {
+			output.Failure("Ping failed: %s", icmpResult.Error)
+		}
+
 		output.Section("Summary")
 
 		summary.PrintTiming("DNS", dnsResult.Duration)
@@ -114,6 +125,7 @@ var rootCmd = &cobra.Command{
 		summary.PrintTiming("UDP", udpResult.Duration)
 		summary.PrintTiming("TLS", tlsResult.Duration)
 		summary.PrintTiming("HTTP", httpResult.Duration)
+		summary.PrintTiming("ICMP", icmpResult.Duration)
 		fmt.Println()
 	},
 }
