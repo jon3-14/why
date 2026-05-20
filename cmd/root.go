@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/jon-314/why/internal/dns"
 	"github.com/jon-314/why/internal/tcp"
+	"github.com/jon-314/why/internal/tls"
 	"github.com/spf13/cobra"
 )
 
@@ -54,6 +56,26 @@ if tcpResult.Success {
 	fmt.Printf("✓ Connected to port 443 in %v\n", tcpResult.Duration)
 } else {
 	fmt.Printf("✗ TCP failed: %s\n", tcpResult.Error)
+}
+
+fmt.Println()
+
+tlsResult := tls.Check(host, 443)
+
+fmt.Println("TLS")
+
+if tlsResult.Success {
+	fmt.Printf("✓ Handshake successful in %v\n", tlsResult.Duration)
+	fmt.Printf("✓ Version: %s\n", tlsResult.Version)
+	fmt.Printf("✓ Certificate CN: %s\n", tlsResult.CommonName)
+
+	if tlsResult.Expired {
+		fmt.Println("✗ Certificate is expired")
+	} else {
+		fmt.Printf("✓ Certificate valid for %v\n", tlsResult.ExpiresIn.Round(time.Hour*24))
+	}
+} else {
+	fmt.Printf("✗ TLS failed: %s\n", tlsResult.Error)
 }
 },
 }
