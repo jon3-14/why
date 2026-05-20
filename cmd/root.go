@@ -14,6 +14,7 @@ import (
 	"github.com/jon-314/why/internal/summary"
 	"github.com/jon-314/why/internal/tcp"
 	"github.com/jon-314/why/internal/tls"
+	"github.com/jon-314/why/internal/udp"
 	"github.com/spf13/cobra"
 )
 
@@ -96,11 +97,30 @@ var rootCmd = &cobra.Command{
 		}
 
 		fmt.Println()
+
+udpResult := udp.Check(host, 53)
+
+fmt.Println("UDP")
+
+if udpResult.Success {
+	fmt.Printf("✓ UDP packet sent in %v\n", udpResult.Duration)
+
+	if udpResult.Response {
+		fmt.Println("✓ Response received")
+	} else {
+		fmt.Println("! No response received")
+	}
+} else {
+	fmt.Printf("✗ UDP failed: %s\n", udpResult.Error)
+}
+
+		fmt.Println()
 		fmt.Println("Summary")
 		fmt.Println()
 
 		summary.PrintTiming("DNS", result.Duration)
 		summary.PrintTiming("TCP", tcpResult.Duration)
+		summary.PrintTiming("UDP", udpResult.Duration)
 		summary.PrintTiming("TLS", tlsResult.Duration)
 		summary.PrintTiming("HTTP", httpResult.Duration)
 		fmt.Println()
